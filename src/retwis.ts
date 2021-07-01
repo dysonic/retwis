@@ -1,26 +1,16 @@
-// require 'Predis/Autoloader.php';
-// Predis\Autoloader::register();
-import { Request } from 'express';
-import { RedisClientAsync } from './helpers/redis';
-/*
-function getrand() {
-    $fd = fopen("/dev/urandom","r");
-    $data = fread($fd,16);
-    fclose($fd);
-    return md5($data);
-}
+import { Request, Response } from 'express';
+import { AsyncRedisClient } from './index';
 
-*/
-export const isLoggedIn = async (req: Request, client: RedisClientAsync) => {
+export const isLoggedIn = async (req: Request, client: AsyncRedisClient) => {
   if (req.session.user) {
     return true;
   }
 
   if (req.cookies.auth) {
     const authCookie: string = req.cookies.auth;
-    const userId: string | null = await client.hgetAsync('auths', authCookie);
+    const userId: string | null = await client.hget('auths', authCookie);
     if (userId) {
-      const userAuthCookie: string | null = await client.hgetAsync(`user:${userId}`, 'auth');
+      const userAuthCookie: string | null = await client.hget(`user:${userId}`, 'auth');
       if (authCookie !== userAuthCookie) {
         return false;
       }
@@ -63,20 +53,11 @@ function gt($param) {
     if ($val === false) return false;
     return trim($val);
 }
+*/
+export const goback = (msg: string, res: Response) => {
+  res.render('back', { msg });
+}
 /*
-
-function utf8entities($s) {
-    return htmlentities($s,ENT_COMPAT,'UTF-8');
-}
-
-function goback($msg) {
-    include("header.php");
-    echo('<div id ="error">'.utf8entities($msg).'<br>');
-    echo('<a href="javascript:history.back()">Please return back and try again</a></div>');
-    include("footer.php");
-    exit;
-}
-
 function strElapsed($t) {
     $d = time()-$t;
     if ($d < 60) return "$d seconds";
