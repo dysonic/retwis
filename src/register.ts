@@ -5,10 +5,6 @@ import { AsyncRedisClient  } from './index';
 export const register = (app: Application, client: AsyncRedisClient) => {
   app.post('/register', async (req: Request, res: Response) => {
 
-    // tslint:disable-next-line:no-console
-    // console.log(req.body)
-    // res.json(req.body)
-
     // Form sanity checks
     if (!req.body.username || !req.body.password || !req.body.password2) {
       return goback('Every field of the registration form is needed!', res);
@@ -30,8 +26,11 @@ export const register = (app: Application, client: AsyncRedisClient) => {
     const userId = await client.incr('next_user_id');
     const userIdStr = String(userId);
 
-    // const authSecret = getrand();
     const authSecret = req.session.id;
+
+    // tslint:disable-next-line:no-console
+    console.log(`registration successful for '${username}'. Storing authSecret: ${authSecret}`);
+
     await client.hset('users', username, userIdStr);
     await client.hmset(`user:${userId}`,
         'username', username,
@@ -43,13 +42,13 @@ export const register = (app: Application, client: AsyncRedisClient) => {
     // JS Date.now() method returns the number of MILLISECONDS elapsed since January 1, 1970 00:00:00 UTC.
     // Use seconds:
     const nowSeconds = Math.floor(Date.now());
-    await client.zadd('users_by_time', Date.now(), username);
+    await client.zadd('users_by_time', nowSeconds, username);
 
     // User registered! Login her / him.
     // setcookie('auth',$authsecret,time()+3600*24*365);
     req.session.user = {
       id: userIdStr,
-      name: username,
+      username,
     }
 
     res.render('register', { username });

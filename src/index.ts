@@ -10,6 +10,7 @@ import { User } from './types/user';
 import { isLoggedIn } from './retwis';
 import path from 'path';
 import { register } from './register';
+import { login } from './login';
 
 declare module 'express-session' {
   interface SessionData {
@@ -55,11 +56,7 @@ app.get('/home', async (req, res) => {
 });
 
 register(app, client);
-
-app.get('/login', async (req, res) => {
-  res.send('Home!')
-  // res.render('home');
-});
+login(app, client);
 
 app.listen(port, () => {
   // tslint:disable-next-line:no-console

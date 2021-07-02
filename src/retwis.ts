@@ -8,28 +8,35 @@ export const isLoggedIn = async (req: Request, client: AsyncRedisClient) => {
 
   if (req.cookies.auth) {
     const authCookie: string = req.cookies.auth;
+
+    // tslint:disable-next-line:no-console
+    console.log('authCookie:', authCookie);
+
     const userId: string | null = await client.hget('auths', authCookie);
     if (userId) {
       const userAuthCookie: string | null = await client.hget(`user:${userId}`, 'auth');
       if (authCookie !== userAuthCookie) {
+
+        // tslint:disable-next-line:no-console
+        console.log('auth cookie mismatch - userAuthCookie:', userAuthCookie);
         return false;
       }
-      // loadUserInfo(userId);
+      loadUserInfo(userId, req, client);
       return true;
     }
   }
   return false;
 }
-/*
-function loadUserInfo($userid) {
-    global $User;
 
-    $r = redisLink();
-    $User['id'] = $userid;
-    $User['username'] = $r->hget("user:$userid","username");
+export const loadUserInfo = async (userId: string, req: Request, client: AsyncRedisClient) => {
+    const username = await client.hget(`user:${userId}`, 'username');
+    req.session.user = {
+      id: userId,
+      username,
+    }
     return true;
 }
-
+/*
 function redisLink() {
     static $r = false;
 
