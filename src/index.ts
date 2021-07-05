@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
@@ -29,7 +29,7 @@ client.on('error', (error: Error) => {
 app.use(logger('dev'));
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-app.use(cookieParser());
+app.use(cookieParser('Harry Potter'));
 app.use(session({ secret: 'Harry Potter', name: 'auth', saveUninitialized: false, resave: false }))
 app.use(express.static('public'));
 app.set('views', path.resolve(__dirname, '../views'));
@@ -44,21 +44,39 @@ app.get('/', async (req, res) => {
     return res.render('index');
   }
 
-  res.redirect('/home')
-
-  // res.send('Hello World!')
-  // res.render('home');
-});
-
-app.get('/home', async (req, res) => {
-  res.send('Home!')
-  // res.render('home');
+  res.redirect('/home');
 });
 
 register(app, client);
 login(app, client);
 
 app.listen(port, () => {
+
   // tslint:disable-next-line:no-console
   console.log(`Example app listening on port ${port}!`)
 });
+
+const authenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.session.user) {
+
+    // tslint:disable-next-line:no-console
+    console.warn('authenticated middleware - no user set!');
+
+    res.redirect('/');
+    return;
+  }
+  next();
+};
+
+app.all('*', authenticated);
+
+app.get('/home', async (req, res) => {
+  const { user } = req.session;
+
+  // tslint:disable-next-line:no-console
+  console.warn('home - user:', user);
+
+  res.render('home', user);
+});
+
+

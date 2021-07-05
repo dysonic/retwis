@@ -14,13 +14,17 @@ export const login = (app: Application, client: AsyncRedisClient) => {
     const username = req.body.username.trim();
     const password = req.body.password.trim();
 
-    const userId = client.hget('users', username);
+    const userId = await client.hget('users', username);
     if (!userId) {
       return goback('Wrong username or password', res);
     }
     const realPassword = await client.hget(`user:${userId}`, 'password');
     if (realPassword !== password) {
-      return goback('Wrong useranme or password', res);
+
+      // tslint:disable-next-line:no-console
+      console.log(`login #${userId} - supplied password:`, password, 'real password:', realPassword);
+
+      return goback('Wrong username or password', res);
     }
 
     // Username / password OK, set the cookie and redirect to /index
@@ -36,6 +40,6 @@ export const login = (app: Application, client: AsyncRedisClient) => {
       username,
     };
 
-    res.redirect('/index')
+    res.redirect('/')
   });
 };

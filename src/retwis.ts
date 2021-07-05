@@ -7,10 +7,14 @@ export const isLoggedIn = async (req: Request, client: AsyncRedisClient) => {
   }
 
   if (req.cookies.auth) {
-    const authCookie: string = req.cookies.auth;
+    let authCookie: string | null = req.cookies.auth;
+    if (authCookie && /:/.test(authCookie)) {
+      authCookie = authCookie.split(/[:\.]/)[1];
+    }
+    const authSecret = req.session.id;
 
     // tslint:disable-next-line:no-console
-    console.log('authCookie:', authCookie);
+    console.log('isLoggedin - authCookie:', authCookie, 'authSecret (session id):', authSecret);
 
     const userId: string | null = await client.hget('auths', authCookie);
     if (userId) {
@@ -18,17 +22,26 @@ export const isLoggedIn = async (req: Request, client: AsyncRedisClient) => {
       if (authCookie !== userAuthCookie) {
 
         // tslint:disable-next-line:no-console
-        console.log('auth cookie mismatch - userAuthCookie:', userAuthCookie);
+        console.log('isLoggedin - auth cookie mismatch - userAuthCookie:', userAuthCookie);
         return false;
       }
       loadUserInfo(userId, req, client);
       return true;
+    }
+    else {
+
+        // tslint:disable-next-line:no-console
+        console.log('isLoggedin - user session not found');
     }
   }
   return false;
 }
 
 export const loadUserInfo = async (userId: string, req: Request, client: AsyncRedisClient) => {
+
+    // tslint:disable-next-line:no-console
+    console.log('loadUserInfo - userId:', userId);
+
     const username = await client.hget(`user:${userId}`, 'username');
     req.session.user = {
       id: userId,
